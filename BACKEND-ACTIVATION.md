@@ -8,6 +8,7 @@ In Supabase → SQL Editor:
 
 - If the original seven tables do not exist, run `supabase/migrations/202611150001_initial.sql` first.
 - Run `supabase/migrations/202611150002_accounts_admin_aviation.sql` once.
+- Run `supabase/migrations/202611150003_aviation_singleflight.sql` to coalesce concurrent status lookups. This migration and the updated function have already been applied to the linked project.
 
 The second migration adds ADMIN accounts, admin intake review, stronger submission checks, protected schedule/rebooking functions, Realtime publication entries, and a server-only Aviationstack cache/budget ledger. Existing unapproved manager requests are moved back to admin review. Previously approved/ticketed records are preserved.
 
@@ -21,9 +22,9 @@ Add at least one ADMIN profile using its actual Auth UUID, employee details, and
 
 ## 3. Deploy the protected provider function
 
-Using the Supabase dashboard, create an Edge Function named **aviationstack** and paste `supabase/functions/aviationstack/index.ts`. Keep JWT verification enabled. In Edge Function Secrets add **AVIATIONSTACK_API_KEY** with your provider key. It has also been saved in the git-ignored `.env.server.local` for local CLI deployment; it is never imported into the React bundle or included in the source ZIP.
+Deploy the **aviationstack** folder with its imported handler and `_shared/aviation.ts` module using the CLI below, or include all three source files in a dashboard/API deployment while preserving their relative paths. Pasting only `index.ts` is insufficient. Keep JWT verification enabled. In Edge Function Secrets add **AVIATIONSTACK_API_KEY** with your provider key. It is never imported into the React bundle or included in the source ZIP.
 
-Optional secret `APP_ALLOWED_ORIGINS` accepts comma-separated app origins. The current defaults permit the existing private hosted Site and localhost:5173. Add your own domain if you host elsewhere.
+Secret `APP_ALLOWED_ORIGINS` accepts comma-separated app origins. It is configured for `https://unilever-travel-ph.vercel.app`, `http://localhost:5173` and `http://127.0.0.1:5173`. Keep it aligned with the actual website domain. The previous ChatGPT-hosted default did not allow Vercel and caused HTTP 403 preflight failures.
 
 If you prefer a linked, authenticated Supabase CLI:
 
@@ -51,9 +52,9 @@ Cloud ticketing uses server-calculated fares and generated references. Leave the
 5. Check split billing and settle the ledger.
 6. Search an IATA flight number on Live Flight Status. Empty/provider error states must remain visible rather than being replaced by fabricated live results.
 
-There is no automatic provider polling. Lookups are cached for 15 minutes, limited to one uncached request per user per minute, and capped at 80 upstream calls per calendar month to leave headroom within the provider's currently documented 100-request free allowance. Other applications using the same provider key are outside that cap. Provider plan restrictions remain applicable; the free plan is advertised for non-commercial use, and historical/future data requires suitable access.
+There is no automatic provider polling. Only explicit form submission can invoke the function. Lookups (including empty results) are cached for 15 minutes from their original fetch timestamp, limited to one uncached request per user per minute, and capped at 80 upstream attempts per calendar month. A short server-side lease avoids duplicate concurrent upstream calls for the same flight. Other applications using the same provider key are outside that cap. Aviationstack currently advertises HTTPS on the free plan; this function uses HTTPS with no insecure HTTP fallback. Real-time coverage is provider-dependent, and historical/future data requires suitable access. Never substitute internal demo inventory for a live provider result.
 
-The supplied key was verified with one successful HTTPS provider request. Database migrations and role enforcement were executed against a local PostgreSQL-compatible test runtime with Supabase Auth stubs; this does not prove your remote project has applied them. The remote backend cannot be activated here without authenticated Supabase management access.
+The linked backend is active. The updated function, origin secret and third migration are deployed. Controlled server verification queried PR2845 once over HTTPS, reused its cached response on the second request, and confirmed one upstream call/one usage reservation. The provider returned no live records, which must remain an explicit empty state. Deployed Vercel preflight returned 204 and anonymous POST returned 401. Full signed-in production-browser verification remains pending. See `SHELL-LIVE-STATUS-FIX.md` for validation details.
 
 Smartpoint Cloud was used as a screenshot reference for compact outline icons and segmented flight panels. No proprietary vector file format or Travelport integration is claimed.
 

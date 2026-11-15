@@ -1,2 +1,1 @@
-export interface LiveFlight {flight_date:string;flight_status:string;airline:{name:string};flight:{iata:string;number:string};departure:{iata:string;airport:string;scheduled:string;estimated?:string;actual?:string;gate?:string;terminal?:string;delay?:number};arrival:{iata:string;airport:string;scheduled:string;estimated?:string;actual?:string;gate?:string;terminal?:string;delay?:number};}
-export function normalizeFlightNumber(value:string){const code=value.toUpperCase().replace(/\s/g,'');if(!/^[A-Z0-9]{2}\d{1,4}[A-Z]?$/.test(code))throw new Error('Use an IATA flight number such as PR2845 or 5J563.');return code;}
+export * from '../../supabase/functions/_shared/aviation';

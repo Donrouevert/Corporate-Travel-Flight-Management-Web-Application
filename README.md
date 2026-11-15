@@ -34,15 +34,33 @@ The visuals follow the supplied Smartpoint screenshot's compact outline-icon and
 
 ## Verification
 
-61 Vitest tests pass, including required-field and flight-search validation, admin-first gatekeeping, role enforcement, seat transaction rollback, concurrent oversell prevention, billing, sign-in and password recovery. Both migrations were executed in a local PostgreSQL-compatible runtime with Auth stubs, including tests for RLS, stage gates, billing, settlement, provider-cache access, rate limiting and monthly budget enforcement. Browser QA checked role dashboards, admin intake, employee record isolation, restricted routes and responsive account screens. One HTTPS provider call confirmed the supplied Aviationstack key works.
+121 Vitest tests pass, including required-field and flight-search validation, admin-first gatekeeping, role enforcement, seat transaction rollback, concurrent oversell prevention, billing, sign-in, password recovery, loading placeholders, immediate navigation, lazy-module readiness, account-cache preservation, shell branding, mobile drawer behavior, on-demand status requests, cache reuse, provider errors and PHT rendering. All three migrations were checked in a local PostgreSQL-compatible runtime with Auth stubs, including RLS, stage gates, billing, settlement, provider-cache access, single-flight leases, rate limiting and monthly budget enforcement. Earlier browser QA checked role dashboards, admin intake, employee record isolation, restricted routes and responsive account screens. Current shell/status UI behavior is covered by DOM component tests; a new production-browser visual test has not been performed.
 
-The remote migrations, four assigned account profiles and Aviationstack Edge Function are deployed. A real-user end-to-end cloud test remains pending. PNRs/tickets and settlement records are application simulations; no airline reservation or payment provider integration is included.
+The remote migrations, four assigned account profiles and updated Aviationstack Edge Function are deployed. A real-user end-to-end cloud test remains pending. See **SHELL-LIVE-STATUS-FIX.md** for the verified CORS correction, cache checks and provider coverage limits. PNRs/tickets and settlement records are application simulations; no airline reservation or payment provider integration is included.
+
+## Loading, navigation and responsive layout
+
+See **FLIGHT-SEARCH-FIX.md** for the inventory/date mismatch diagnosis and live Supabase search verification. In cloud mode, flight search reads `flight_schedules` with joined `flight_cabins`; there is no local-data fallback. The first departure date comes from stored route inventory, and empty results offer actual inventory dates instead of the browser demo's fixed date-offset hint.
+
+Pages load as separate JavaScript modules. Navigation links preload page code on pointer, keyboard-focus or touch intent, without making speculative API requests. Cached records stay visible during background refreshes. Repeated Supabase sign-in events for the same user preserve the mounted page and query cache; changing accounts still clears account data. Realtime updates refresh only the affected travel queries and combine transaction bursts, without invalidating flight-status lookups.
+
+Module entry uses a 170 ms opacity/transform transition. There is no exit wait, minimum skeleton duration or artificial navigation delay. Skeleton layouts cover initial workspace startup, dashboard metrics, lists, request details, forms and flight results. Loading decoration is hidden from screen readers and announced through one status region. Reduced-motion preferences disable the animations.
+
+Responsive rules provide desktop navigation, tablet layouts, mobile forms without iOS focus zoom, larger touch controls, constrained popovers, accessible horizontally scrollable tables and narrow-screen detail panels. Automated tests and the production build pass. Visual verification of this update on phone, tablet and desktop remains pending because the available Windows browser tool stopped before it could verify the browser URL. Smoothness on physical devices and slow networks has not been measured.
+
+`vercel.json` sets Vite, `npm run build`, `dist`, and the SPA fallback for direct module and password-reset links. Push the updated source to the GitHub branch tracked by the existing Vercel project to deploy it. Supabase environment values remain configured in Vercel; server keys stay in Supabase.
 
 ## Password recovery
 
 Supabase Auth handles reset emails with `resetPasswordForEmail` and password changes with `updateUser`; no separate reset API is needed. The email link returns to `/auth/reset-password`. The recovery screen requires an authenticated session, validates a minimum of eight characters and matching confirmation, and signs out before returning to sign-in. Invalid or expired links offer a new reset email. There is no social sign-in.
 
-The hosted Site URL and reset redirect allowlist are configured in Supabase. Local development on port 5173 is also allowed. If the app moves to another domain or port, add that exact `/auth/reset-password` URL in Supabase **Authentication → URL Configuration**.
+The production Supabase Site URL is `https://unilever-travel-ph.vercel.app`. Its exact recovery URL, `https://unilever-travel-ph.vercel.app/auth/reset-password`, is allowed in Supabase **Authentication → URL Configuration**. The retired ChatGPT-hosted redirect has been removed. The frontend requests the current browser origin, so moving the app requires updating both the Site URL and redirect allowlist. Local development on port 5173 is also allowed. Request a new reset email after changing these settings; old emails may contain the old redirect or an expired/used token.
+
+The reset email uses Supabase's `ConfirmationURL`, which verifies the recovery token before returning to the app. Keep that verification link in the email template; do not replace it with a direct login-page link. Redirect configuration was verified by reading the remote settings back. No real reset email was sent or password changed during verification.
 
 Configure a custom SMTP provider under **Authentication → Email → SMTP Settings** before sending reset emails to general users. This project's custom SMTP is currently unconfigured; Supabase's default sender only allows organization team addresses. See https://supabase.com/docs/guides/auth/auth-smtp. Automated recovery tests mock Supabase calls; no real reset emails were sent and no account passwords were changed during testing.
+
+## Browser icon
+
+The app includes the official Unilever SVG favicon, a 32×32 PNG fallback and a 180×180 Apple home-screen icon under `public/`. `index.html` declares each icon with a version query to refresh cached icons after deployment. See `public/brand/SOURCE.md` for provenance. Push the updated HTML and public assets to the Vercel-connected GitHub repository to publish them.
 

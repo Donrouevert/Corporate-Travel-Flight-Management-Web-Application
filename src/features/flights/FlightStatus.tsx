@@ -1,7 +1,45 @@
-import { useState, type FormEvent } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Plane, Search, Clock3, MapPin } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { normalizeFlightNumber, type LiveFlight } from '../../lib/aviation';
-import { Input, PageTitle, Loading, Empty } from '../../components/ui';
-export function FlightStatus(){const [code,setCode]=useState(''),[lookup,setLookup]=useState(''),[error,setError]=useState('');const query=useQuery({queryKey:['aviationstack',lookup],enabled:!!lookup&&!!supabase,retry:false,staleTime:15*60000,refetchOnWindowFocus:false,queryFn:async()=>{const {data,error}=await supabase!.functions.invoke('aviationstack',{body:{flight_iata:lookup}});if(error)throw new Error('Live lookup failed. Confirm the Aviationstack Edge Function is deployed and your account is signed in.');if(data.error)throw new Error(data.error);return data as {data:LiveFlight[];fetchedAt:string;cached:boolean};}});const submit=(e:FormEvent)=>{e.preventDefault();try{const normalized=normalizeFlightNumber(code);if(normalized===lookup&&supabase)void query.refetch();else setLookup(normalized);setError('');}catch(e){setError((e as Error).message);}};const time=(v?:string)=>v&&Number.isFinite(Date.parse(v))?new Date(v).toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'Not reported';return <><PageTitle eyebrow="AVIATIONSTACK · FLIGHT OPERATIONS" title="Live flight status" description="Check current flight information by flight number. All times below are Philippine Standard Time."/><section className="card status-search"><div className="smart-panel-heading"><Plane size={18}/><b>Flights</b><span>Live status</span></div><form onSubmit={submit}><Input label="Flight number" placeholder="PR2845" required value={code} onChange={e=>setCode(e.target.value)}/><button className="btn btn-primary" disabled={query.isFetching}><Search size={16}/>Check status</button></form><div className="subtle-banner">Status data is separate from bookable inventory. Aviationstack does not supply fares or reservable seats. Lookups use a 15-minute cache and are never automatically polled.</div></section>{!supabase?<div className="card"><Empty title="Cloud sign-in required" description="Configure Supabase and deploy the protected Aviationstack function to use live data."/></div>:error||query.error?<div role="alert" className="validation-errors">{error||query.error?.message}</div>:query.isFetching?<Loading/>:query.data?<><p className="status-timestamp"><Clock3 size={14}/> Retrieved {time(query.data.fetchedAt)} · {query.data.cached?'Cached response':'Provider response'} · not a guaranteed live position</p>{!query.data.data.length?<Empty title="No matching flight reported" description="Confirm the flight number. Future and historical schedules may require a different provider plan."/>:query.data.data.map((f,i)=><article className="card live-flight" key={`${f.flight.iata}-${f.flight_date}-${i}`}><div className="smart-panel-heading"><Plane size={18}/><b>{f.flight.iata||f.flight.number}</b><span>{f.airline.name}</span><strong className={`provider-status provider-${f.flight_status}`}>{f.flight_status}</strong></div><div className="live-route">{[f.departure,f.arrival].map((airport,j)=><section key={j}><small>{j?'TO':'FROM'}</small><h2><Plane size={22}/>{airport.iata||'—'}</h2><p>{airport.airport}</p><dl><dt>Scheduled</dt><dd>{time(airport.scheduled)}</dd><dt>Estimated</dt><dd>{time(airport.estimated)}</dd><dt>Actual</dt><dd>{time(airport.actual)}</dd><dt>Terminal / gate</dt><dd>{airport.terminal||'—'} / {airport.gate||'—'}</dd><dt>Delay</dt><dd>{airport.delay??0} min</dd></dl></section>)}</div></article>)}</>:<div className="card"><Empty title="Follow your flight" description="Enter a flight number and select Check status. No API quota is used until you search."/></div>}</>;}
+import {useRef,useState,type FormEvent} from 'react';
+import {useQuery,useQueryClient} from '@tanstack/react-query';
+import {toast} from 'sonner';
+import {Clock3,Plane,Search} from 'lucide-react';
+import {supabase} from '../../lib/supabase';
+import {flightStatusLabel,formatFlightTime,normalizeFlightNumber,selectRelevantFlight,type FlightStatusResult} from '../../lib/aviation';
+import {flightStatusQuerySettings,lookupFlightStatus} from '../../lib/flightStatusQuery';
+import {useAuth} from '../../contexts/AuthContext';
+import {Empty,Input,Loading,PageTitle} from '../../components/ui';
+
+export function FlightStatus(){
+ const {user}=useAuth(),client=useQueryClient();
+ const [code,setCode]=useState(''),[lookup,setLookup]=useState(''),[error,setError]=useState(''),[checking,setChecking]=useState(false),[memoryCached,setMemoryCached]=useState(false);
+ const inFlight=useRef(false);
+ const account=user.authId??user.employeeId;
+ const query=useQuery({queryKey:['aviationstack',account,lookup],queryFn:()=>lookupFlightStatus(lookup),...flightStatusQuerySettings,enabled:false});
+ const submit=async(event:FormEvent)=>{
+  event.preventDefault();if(inFlight.current)return;
+  try{
+   const normalized=normalizeFlightNumber(code);
+   if(!supabase)throw new Error('Cloud sign-in is required to check live flight status.');
+   setCode(normalized);setLookup(normalized);setError('');setChecking(true);inFlight.current=true;
+   const key=['aviationstack',account,normalized];
+   const cached=client.getQueryData<FlightStatusResult>(key);
+   const fresh=!!cached&&Date.now()-Date.parse(cached.fetchedAt)<flightStatusQuerySettings.staleTime;
+   setMemoryCached(fresh);
+   // Only an explicit submission reaches fetchQuery; fresh data is reused without an invoke.
+   const response=fresh?cached!:await client.fetchQuery({queryKey:key,queryFn:()=>lookupFlightStatus(normalized),...flightStatusQuerySettings,staleTime:0});
+   client.setQueryData(key,response,{updatedAt:Math.min(Date.now(),Date.parse(response.fetchedAt))});
+  }catch(issue){const message=issue instanceof Error?issue.message:'The flight lookup failed. Please try again.';setError(message);toast.error(message);}
+  finally{inFlight.current=false;setChecking(false);}
+ };
+ const result=query.data;
+ const flight=result?selectRelevantFlight(result.data,lookup):undefined;
+ return <><PageTitle eyebrow="AVIATIONSTACK · FLIGHT OPERATIONS" title="Live flight status" description="Check current flight information by flight number. All times below are Philippine Standard Time."/>
+  <section className="card status-search"><div className="smart-panel-heading"><Plane size={18}/><b>Flights</b><span>Live status</span></div><form onSubmit={event=>void submit(event)}><Input label="Flight number" placeholder="PR2845" required value={code} onChange={event=>setCode(event.target.value)} maxLength={32}/><button className="btn btn-primary" disabled={checking||!supabase}><Search size={16}/>{checking?'Checking…':'Check status'}</button></form><div className="subtle-banner">Lookups run only when you submit. Results, including empty results, are cached for 15 minutes. Internal demo schedules are not live airline data.</div></section>
+  {!supabase?<div className="card"><Empty title="Cloud sign-in required" description="Configure the Supabase URL and publishable key to use the protected flight-status service."/></div>
+   :error?<div role="alert" className="validation-errors">{error}</div>
+   :checking?<Loading layout="status" label={`Checking ${lookup}`}/>
+   :result?<><p className="status-timestamp"><Clock3 size={14}/> Last fetched {formatFlightTime(result.fetchedAt)} · {memoryCached||result.cached?'Cached response':'Provider response'} · 15-minute cache</p>
+    {!flight?<div className="card"><Empty title={`No live status found for ${lookup}`} description="The provider has not reported a matching current-day flight. Confirm the flight number and try again later. Demo flight numbers may have no live record."/></div>
+     :<article className="card live-flight"><div className="smart-panel-heading"><Plane size={18}/><b>{flight.flight.iata}</b><span>{flight.airline.name||'Airline not reported'}</span><strong className={`provider-status provider-${flight.flight_status}`}>{flightStatusLabel(flight)}</strong></div><div className="live-route">{[flight.departure,flight.arrival].map((airport,index)=><section key={index}><small>{index?'ARRIVAL':'DEPARTURE'}</small><h2><Plane size={22}/>{airport.iata||'Not reported'}</h2><p>{airport.airport||'Airport name not reported'}</p><dl><dt>Scheduled</dt><dd>{formatFlightTime(airport.scheduled)}</dd><dt>Estimated</dt><dd>{formatFlightTime(airport.estimated)}</dd><dt>Actual</dt><dd>{formatFlightTime(airport.actual)}</dd><dt>Terminal</dt><dd>{airport.terminal||'Not reported'}</dd><dt>Gate</dt><dd>{airport.gate||'Not reported'}</dd><dt>Delay</dt><dd>{airport.delay===undefined?'Not reported':`${airport.delay} min`}</dd></dl></section>)}</div><p className="status-result-note">Showing the active or nearest current-day flight. Times are PHT (UTC+8); this is provider-reported status, not a guaranteed live aircraft position.</p></article>}</>
+   :<div className="card"><Empty title="Follow your flight" description="Enter an IATA flight number and choose Check status. No request is made when this page opens."/></div>}
+ </>;
+}
