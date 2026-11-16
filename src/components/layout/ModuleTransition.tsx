@@ -1,5 +1,6 @@
 import { Suspense, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
+import { ReloadReady } from '../ReloadReady';
 import { Skeleton } from '../Skeleton';
 import { skeletonForPath } from '../../lib/modules';
 
@@ -14,6 +15,6 @@ export function ModuleTransition({ children }: { children: ReactNode }) {
     content.current?.focus({preventScroll:true});
   }, [pathname]);
   return <div ref={content} className="module-transition" key={pathname} tabIndex={-1}>
-    <Suspense fallback={<Skeleton layout={skeletonForPath(pathname)} fullPage label="Loading this module"/>}>{children}</Suspense>
+    <Suspense fallback={<Skeleton layout={skeletonForPath(pathname)} fullPage label="Loading this module"/>}>{children}<ReloadReady/></Suspense>
   </div>;
 }

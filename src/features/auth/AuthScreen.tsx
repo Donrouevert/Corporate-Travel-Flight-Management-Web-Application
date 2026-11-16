@@ -1,12 +1,14 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, Plane, ShieldCheck } from 'lucide-react';
 import { supabase, cloudMode } from '../../lib/supabase';
 import { demoUsers } from '../../db/seed';
+import { completeReloadAnimation } from '../../lib/reloadAnimation';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import type { User } from '../../types/travel';
 
 type Mode='login'|'forgot'|'sent'|'reset'|'updated';
 export function AuthScreen({error='',onDemo,recovery=false,recoveryReady=false,onRecoveryExit,onSignedIn}:{error?:string;onDemo:(u:User)=>void;recovery?:boolean;recoveryReady?:boolean;onRecoveryExit?:()=>Promise<void>;onSignedIn?:()=>void}) {
+ useEffect(()=>{completeReloadAnimation();},[]);
  const [mode,setMode]=useState<Mode>(recovery?'reset':'login'),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[visible,setVisible]=useState(false),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const changeMode=(next:Mode)=>{setMessage('');setPassword('');setConfirm('');setVisible(false);setMode(next);};
  const submit=async(event:FormEvent)=>{event.preventDefault();if(!supabase)return;setMessage('');

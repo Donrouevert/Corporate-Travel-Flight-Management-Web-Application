@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeToaster } from './components/ThemeToggle';
+import { cancelReloadAnimation } from './lib/reloadAnimation';
 import { initializeTheme } from './lib/theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
@@ -23,7 +24,7 @@ const query = new QueryClient({ defaultOptions: { queries: { staleTime: 15000, r
 class ErrorBoundary extends Component<{children:ReactNode},{error:Error|null}> {
   state={error:null as Error|null};
   static getDerivedStateFromError(error:Error){return {error};}
-  componentDidCatch(error:Error,info:ErrorInfo){console.error('Travel workspace error',error,info.componentStack);}
+  componentDidCatch(error:Error,info:ErrorInfo){cancelReloadAnimation();console.error('Travel workspace error',error,info.componentStack);}
   render(){if(this.state.error)return <div className="startup-error"><h1>Your workspace needs a refresh</h1><p>{this.state.error.message}</p><button className="btn btn-primary" onClick={()=>window.location.reload()}>Reload workspace</button></div>;return this.props.children;}
 }
 function RoleGate({roles,children}:{roles:Role[];children:ReactNode}){const {user}=useAuth();return roles.includes(user.role)?children:<Navigate to="/dashboard" replace/>;}
@@ -31,6 +32,6 @@ async function start() {
   const root=ReactDOM.createRoot(document.getElementById('root')!);
   root.render(<WorkspaceSkeleton/>);
   try { if(!cloudMode)await seedDatabase(); root.render(<React.StrictMode><ErrorBoundary><QueryClientProvider client={query}><AuthProvider><SocketProvider><BrowserRouter><Suspense fallback={<WorkspaceSkeleton/>}><Routes><Route element={<AppShell/>}><Route path="/dashboard" element={<RoleDashboard/>}/><Route path="/flight-status" element={<Navigate to="/flights/search?view=status" replace/>}/><Route path="/flights/search" element={<FlightSearch/>}/><Route path="/bookings/new" element={<BookingWizard/>}/><Route path="/bookings" element={<Bookings/>}/><Route path="/bookings/:id" element={<RequestDetail/>}/><Route path="/admin/flights" element={<RoleGate roles={["TMC"]}><FlightAdmin/></RoleGate>}/><Route path="/payments" element={<RoleGate roles={["TMC"]}><Payments/></RoleGate>}/><Route path="*" element={<Navigate to="/dashboard" replace/>}/></Route></Routes></Suspense></BrowserRouter><ThemeToaster/></SocketProvider></AuthProvider></QueryClientProvider></ErrorBoundary></React.StrictMode>); }
-  catch(error){root.render(<div className="startup-error"><h1>Browser storage is unavailable</h1><p>{error instanceof Error?error.message:'Please enable IndexedDB for this site, then reload.'}</p><button className="btn btn-primary" onClick={()=>window.location.reload()}>Try again</button></div>);}
+  catch(error){cancelReloadAnimation();root.render(<div className="startup-error"><h1>Browser storage is unavailable</h1><p>{error instanceof Error?error.message:'Please enable IndexedDB for this site, then reload.'}</p><button className="btn btn-primary" onClick={()=>window.location.reload()}>Try again</button></div>);}
 }
 void start();
