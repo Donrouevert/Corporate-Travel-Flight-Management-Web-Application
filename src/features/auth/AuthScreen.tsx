@@ -5,7 +5,7 @@ import { demoUsers } from '../../db/seed';
 import type { User } from '../../types/travel';
 
 type Mode='login'|'forgot'|'sent'|'reset'|'updated';
-export function AuthScreen({error='',onDemo,recovery=false,recoveryReady=false,onRecoveryExit}:{error?:string;onDemo:(u:User)=>void;recovery?:boolean;recoveryReady?:boolean;onRecoveryExit?:()=>Promise<void>}) {
+export function AuthScreen({error='',onDemo,recovery=false,recoveryReady=false,onRecoveryExit,onSignedIn}:{error?:string;onDemo:(u:User)=>void;recovery?:boolean;recoveryReady?:boolean;onRecoveryExit?:()=>Promise<void>;onSignedIn?:()=>void}) {
  const [mode,setMode]=useState<Mode>(recovery?'reset':'login'),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[visible,setVisible]=useState(false),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
  const changeMode=(next:Mode)=>{setMessage('');setPassword('');setConfirm('');setVisible(false);setMode(next);};
  const submit=async(event:FormEvent)=>{event.preventDefault();if(!supabase)return;setMessage('');
@@ -13,7 +13,7 @@ export function AuthScreen({error='',onDemo,recovery=false,recoveryReady=false,o
    setBusy(true);try{
      if(mode==='forgot'){const {error}=await supabase.auth.resetPasswordForEmail(email.trim(),{redirectTo:new URL('/auth/reset-password',window.location.origin).href});if(error)throw error;setMode('sent');}
      else if(mode==='reset'){const {error}=await supabase.auth.updateUser({password});if(error)throw error;setPassword('');setConfirm('');setMode('updated');}
-     else{const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;history.replaceState(null,'','/dashboard');}
+     else{const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;onSignedIn?.();history.replaceState(null,'','/dashboard');}
    }catch(issue){setMessage(mode==='login'?'We couldn’t sign you in. Check your email and password, then try again.':issue instanceof Error?issue.message:'We couldn’t complete that request. Please try again.');}finally{setBusy(false);}
  };
  const heading={login:'Welcome back.',forgot:'Forgot password?',sent:'Check your inbox.',reset:'A fresh start.',updated:'You’re all set.'}[mode];
