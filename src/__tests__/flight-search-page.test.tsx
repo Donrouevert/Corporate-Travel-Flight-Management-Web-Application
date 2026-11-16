@@ -14,7 +14,7 @@ beforeEach(()=>{
 });
 afterEach(()=>{cleanup();vi.useRealTimers();vi.clearAllMocks();});
 const open=()=>render(<MemoryRouter><FlightSearch/></MemoryRouter>);
-const chooseTime=async(label:string,time:string)=>{fireEvent.click(screen.getByRole('button',{name:new RegExp('^'+label+':')}));const popup=await screen.findByRole('dialog');const [hour,minute]=time.split(':');fireEvent.click(within(popup).getByRole('button',{name:'hour '+hour}));fireEvent.click(within(popup).getByRole('button',{name:'minute '+minute}));fireEvent.click(within(popup).getByRole('button',{name:'DONE'}));await waitFor(()=>expect(screen.queryByRole('dialog')).not.toBeInTheDocument());};
+const chooseTime=async(label:string,time:string)=>{fireEvent.click(screen.getByRole('button',{name:new RegExp('^'+label+':')}));const popup=await screen.findByRole('dialog');const [hour,minute]=time.split(':');fireEvent.click(within(popup).getByRole('button',{name:'hour '+hour}));fireEvent.change(within(popup).getByRole('textbox',{name:'Minute'}),{target:{value:minute}});fireEvent.click(within(popup).getByRole('button',{name:'DONE'}));await waitFor(()=>expect(screen.queryByRole('dialog')).not.toBeInTheDocument());};
 const chooseDate=async(label:string)=>{fireEvent.click(screen.getByRole('button',{name:/^Depart:/}));const popup=await screen.findByRole('dialog');fireEvent.click(within(popup).getByRole('button',{name:label}));fireEvent.click(within(popup).getByRole('button',{name:'DONE'}));await waitFor(()=>expect(screen.queryByRole('dialog')).not.toBeInTheDocument());};
 describe('Find a flight page with seeded Supabase inventory',()=>{
  it('defaults to a stored date and refreshes Supabase inventory',async()=>{
