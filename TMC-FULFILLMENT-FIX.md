@@ -25,3 +25,7 @@ node supabase/tests/tmc-fulfillment.mjs
 ```
 
 Push the frontend source to the Vercel-connected `main` branch to publish the enabled inputs. The backend supports both old and updated clients during deployment.
+
+## Subsequent role-workflow update
+
+The current system also requires an approved total booking budget. TMC can submit an over-budget quote for Manager review, source matching inventory inline and replace an approved rebooking atomically. Billing uses differences from earlier reconciled amounts. See **ROLE-WORKFLOWS.md**; current validation is 232 application tests, 47 isolated SQL scenarios and migration-preservation checks.

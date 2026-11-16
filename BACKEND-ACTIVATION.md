@@ -17,6 +17,8 @@ The sequence is **Employee → ADMIN → assigned MANAGER → TMC → reconcilia
 
 - Run `supabase/migrations/202611170001_tmc_fulfillment.sql` after the earlier migrations to enable validated TMC fare and reference entry. This migration is already applied to the linked project.
 
+- Run `supabase/migrations/202611180001_role_workflows.sql` after the earlier migrations for budget approvals, corrections, revision history and atomic rebooking/billing adjustments. This migration is applied. It preserves tickets and sends unticketed approvals without a spending limit back for review. Publish the updated frontend so Managers can enter the required budget.
+
 ## 2. Provision actual accounts
 
 Create individual users in Authentication → Users. Insert a profile for each Auth UUID using the template in the previously supplied `SUPABASE-SETUP.md`. Valid roles are `REQUESTOR`, `ADMIN`, `MANAGER`, and `TMC`. Insert managers before linking employees to them. Role changes are administrator operations; there is no public registration path that can assign an elevated role. Use individual credentials for each account.
@@ -66,3 +68,5 @@ References:
 - https://aviationstack.com/faq
 - https://supabase.com/docs/guides/functions/secrets
 - https://supabase.com/docs/guides/functions/quickstart-dashboard
+
+See **ROLE-WORKFLOWS.md** for the current role/module matrix, budget exceptions, retained-ticket rebooking and verification. Manager approval now includes an explicit total booking limit. TMC cannot bypass that cap or manager-controlled baggage allocation.

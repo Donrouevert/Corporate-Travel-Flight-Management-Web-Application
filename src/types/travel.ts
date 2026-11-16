@@ -1,5 +1,5 @@
 export type Role = 'REQUESTOR' | 'MANAGER' | 'TMC' | 'ADMIN';
-export type RequestStatus = 'PENDING_ADMIN' | 'PENDING_APPROVAL' | 'APPROVED_FOR_TMC' | 'TICKETED' | 'REBOOKING_REQUESTED' | 'REJECTED';
+export type RequestStatus = 'PENDING_ADMIN' | 'PENDING_APPROVAL' | 'APPROVED_FOR_TMC' | 'TICKETED' | 'REBOOKING_REQUESTED' | 'REJECTED' | 'CHANGES_REQUESTED';
 export type CabinClass = 'Economy' | 'Premium Economy' | 'Business';
 export type Purpose = 'Business Meeting' | 'Conference' | 'Training' | 'Site Visit' | 'Other';
 export interface Requestor {
@@ -10,7 +10,7 @@ export interface Requestor {
 export interface User extends Requestor { role: Role; authId?: string; }
 export interface ItineraryLeg { origin: string; destination: string; date: string; preferredFlightId?: string; }
 export interface TripDetails {
-  purposeOfTravel: Purpose; purposeOtherText?: string; destinationCountryCity: string;
+  estimatedTotalPhp?: number; purposeOfTravel: Purpose; purposeOtherText?: string; destinationCountryCity: string;
   travelType: 'Domestic' | 'International'; tripType: 'One-Way' | 'Round Trip' | 'Multi-City';
   departureDate: string; preferredDepartureTime: string; returnDate?: string; preferredReturnTime?: string;
   numberOfTravelers: number; originAirport: string; itineraryLegs: ItineraryLeg[];
@@ -34,11 +34,17 @@ export interface CostsPhp {
   employeePayableExcessFee: number; companyBillableTotal: number;
 }
 export interface TmcFulfillment {
+  reservedCabin?:CabinClass; reservedTravelers?:number;
   tmcTravelConsultant: string; bookingReferencePnr: string; airline: string; flightNumber: string;
   departureTimestamp: string; arrivalTimestamp: string; ticketNumber: string; costsPhp: CostsPhp;
   bookingDate: string; paymentStatus: 'UNBILLED' | 'COST_CENTER_CHARGED' | 'SPLIT_SETTLED'; flightIds: string[];
 }
 export interface TravelRequest {
+  historyRecords?:Array<{id:string;kind:string;note:string;created_at:string;snapshot:Record<string,any>}>;
+  approvedBudgetPhp?:number; correctionNote?:string; revision?:number; isRebooking?:boolean;
+  tmcQuote?:{flightIds:string[];fulfillment:Partial<TmcFulfillment>&{baseFare?:number;taxesAndFees?:number;baggageFee?:number};total:number;company:number;employee:number;revision:number};
+  settledCompanyPhp?:number; settledEmployeePhp?:number;
+
   adminReview?: {approved: boolean; reviewer: string; date: string; remarks: string}; id: string; reference: string; status: RequestStatus; requestor: Requestor; tripDetails: TripDetails;
   flightRequirements: FlightRequirements; specialRequirements: SpecialRequirements; approval: Approval;
   tmcFulfillment?: TmcFulfillment; createdAt: string; updatedAt: string;

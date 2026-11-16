@@ -11,6 +11,7 @@ export function calculateCosts(baseFare: number, taxesAndFees: number, baggageFe
 export function validateRequest(r: TravelRequest): string[] {
   const a = r.requestor, b = r.tripDetails, c = r.flightRequirements, e = r.approval;
   const errors: string[] = [];
+  if(b.estimatedTotalPhp!==undefined&&(!Number.isFinite(b.estimatedTotalPhp)||b.estimatedTotalPhp<0||b.estimatedTotalPhp>9999999999.99||Math.abs(b.estimatedTotalPhp*100-Math.round(b.estimatedTotalPhp*100))>0.0001))errors.push('Enter a non-negative estimated total in PHP.');
   if ([a.employeeName, a.employeeId, a.departmentFunction, a.position, a.emailAddress, a.contactNumber, a.costCenterProjectCode, a.approvingManagerId].some(v => !v.trim())) errors.push('Complete all requestor and cost center fields.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.emailAddress)) errors.push('Enter a valid email address.');
   if (!/^\+?[\d\s().-]+$/.test(a.contactNumber) || a.contactNumber.replace(/\D/g,'').length < 7 || a.contactNumber.replace(/\D/g,'').length > 15) errors.push('Enter a valid contact number with 7–15 digits.');

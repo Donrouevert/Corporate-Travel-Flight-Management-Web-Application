@@ -24,7 +24,7 @@ Each account receives REQUESTOR, ADMIN, MANAGER or TMC access from a protected p
 - `/dashboard`: role-specific personal dashboard or action queue.
 - `/flight-status`: manually triggered Aviationstack flight status, separate from bookable inventory.
 - `/flights/search`: corporate route, cabin, fare, baggage and Eco-Choice filters.
-- `/bookings/new`: required-field request wizard; `/bookings` and `/bookings/:id`: lifecycle records, reviews and printable form.
+- `/bookings/new`: Requestor-only request wizard; `/bookings/:id/edit` and `/bookings/:id/rebook`: protected correction/rebooking revisions; `/bookings` and `/bookings/:id`: lifecycle records, reviews and printable form.
 - `/admin/flights`: TMC-only schedules, carrier operations and dispatch.
 - `/payments`: TMC reconciliation and split billing.
 
@@ -34,7 +34,7 @@ The visuals follow the supplied Smartpoint screenshot's compact outline-icon and
 
 ## Verification
 
-200 Vitest tests pass, including required-field and flight-search validation, admin-first gatekeeping, role enforcement, seat transaction rollback, concurrent oversell prevention, billing, sign-in, password recovery, loading placeholders, immediate navigation, lazy-module readiness, account-cache preservation, shell branding, mobile drawer behavior, on-demand status requests, cache reuse, provider errors and PHT rendering. All five migrations were checked in a local PostgreSQL-compatible runtime with Auth stubs, including RLS, stage gates, billing, settlement, provider-cache access, single-flight leases, rate limiting and monthly budget enforcement. Earlier browser QA checked role dashboards, admin intake, employee record isolation, restricted routes and responsive account screens. Current shell/status UI behavior is covered by DOM component tests; a new production-browser visual test has not been performed.
+232 Vitest tests pass, including required-field and flight-search validation, admin-first gatekeeping, role enforcement, seat transaction rollback, concurrent oversell prevention, billing, sign-in, password recovery, loading placeholders, immediate navigation, lazy-module readiness, account-cache preservation, shell branding, mobile drawer behavior, on-demand status requests, cache reuse, provider errors and PHT rendering. All six migrations were checked in a local PostgreSQL-compatible runtime with Auth stubs, including RLS, stage gates, billing, settlement, provider-cache access, single-flight leases, rate limiting and monthly budget enforcement. Earlier browser QA checked role dashboards, admin intake, employee record isolation, restricted routes and responsive account screens. Current shell/status UI behavior is covered by DOM component tests; a new production-browser visual test has not been performed.
 
 The remote migrations, four assigned account profiles and updated Aviationstack Edge Function are deployed. A real-user end-to-end cloud test remains pending. See **SHELL-LIVE-STATUS-FIX.md** for the verified CORS correction, cache checks and provider coverage limits. PNRs/tickets and settlement records are application simulations; no airline reservation or payment provider integration is included.
 
@@ -122,3 +122,9 @@ Five integration tests verify serialized request dates/times, independent round-
 TMC can enter final quoted PHP base fare, taxes, additional baggage charges, consultant name, PNR and ticket number. Empty amounts use selected schedule fares; empty references auto-generate. Amounts apply to the entire booking, across all travelers and legs. The cloud RPC validates these fields and preserves approval, seat locking, unique references, atomic rollback and manager-controlled billing allocation. No additional baggage means the baggage-charge field stays unavailable with an explanation.
 
 The panel explains missing/loading/error inventory and requires a matching future flight for every leg. The linked database contains no MNL–SIN/SIN–MNL schedules, so the illustrated November 22/24 request needs corresponding inventory added through Flight Operations before issuance. No flights or tickets were fabricated. See **TMC-FULFILLMENT-FIX.md** for verification and deployment details.
+
+## Role-specific dashboards and workflow
+
+See **ROLE-WORKFLOWS.md** for the implemented role access, distinct dashboard content, approved booking budgets, correction/resubmission, inline TMC flight sourcing and atomic rebooking. The shared Unilever visual design, themes and module transitions apply to all roles. Only Requestors create or revise their own requests; Admin validates intake; the assigned Manager authorizes business need and total budget; TMC sources/tickets flights and reconciles signed billing adjustments. Shared flight search/status remains available for reference.
+
+The sixth migration is deployed. Existing tickets are retained; one unticketed approval returned for a Manager budget review. Final fares above an approved limit require a reviewed TMC quote. Revised itineraries repeat Admin/Manager review while existing tickets stay held. Prior paid amounts are credited when replacements are reconciled, and audit snapshots preserve earlier details. 232 application tests, 47 isolated SQL scenarios and migration-preservation checks pass. Windows browser visual verification remains blocked by URL identification. Push the frontend source to main to publish the new screens.
