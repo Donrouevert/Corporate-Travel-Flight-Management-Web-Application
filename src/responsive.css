@@ -38,7 +38,8 @@ main { width: 100%; }
 .is-collapsed .sidebar .sidebar-card-wrap { max-height:0; opacity:0; transform:translateX(-12px); }
 .is-collapsed .sidebar nav a { justify-content:flex-start; gap:0; }
 .is-collapsed .sidebar .sidebar-profile { justify-content:flex-start; gap:0; }
-.collapse-btn { transition:transform 200ms ease,scale 200ms ease; }
+/* The shared desktop/tablet toggle stays centered on the rail edge at either width. */
+.sidebar .collapse-btn { top:50%; right:-22px; width:44px; height:44px; translate:0 -50%; z-index:1; transition:background-color 160ms ease,border-color 160ms ease,scale 200ms ease; }
 .collapse-btn > svg { transition:transform 300ms ease-in-out; }
 .collapse-btn[aria-expanded="false"] > svg { transform:rotate(180deg); }
 .header-brand { max-width:145px; overflow:hidden; opacity:1; transform:translateX(0); transition:max-width 200ms ease-in-out,opacity 200ms ease-in-out,transform 200ms ease-in-out; }
@@ -205,6 +206,7 @@ main { width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   .module-transition, .step-transition, .mobile-sidebar, .skeleton-surface::after { animation: none; }
   .skeleton-surface::after { display: none; }
+  .sidebar .collapse-btn,.sidebar .collapse-btn>svg { transition:none!important; }
 }
 /* Remove closed tooltip portals immediately; never leave detached labels beside the rail. */
 .sidebar-tooltip { pointer-events:none; }
