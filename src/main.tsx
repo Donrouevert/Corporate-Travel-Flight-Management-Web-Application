@@ -2,7 +2,8 @@ import React, { Component, Suspense, lazy, type ErrorInfo, type ReactNode } from
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
+import { ThemeToaster } from './components/ThemeToggle';
+import { initializeTheme } from './lib/theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { SocketProvider } from './contexts/SocketContext';
 import { useAuth } from './contexts/AuthContext';
@@ -14,6 +15,8 @@ import { seedDatabase } from './db/seed';
 import './index.css';
 import './responsive.css';
 import './sidebar-theme.css';
+import './themes.css';
+initializeTheme();
 const RoleDashboard=lazy(modules.dashboard), FlightSearch=lazy(modules.flights), BookingWizard=lazy(modules.newRequest), Bookings=lazy(modules.bookings), RequestDetail=lazy(modules.detail), FlightAdmin=lazy(modules.operations), Payments=lazy(modules.payments);
 const AppShell=lazy(()=>import('./components/layout/AppShell').then(m=>({default:m.AppShell})));
 const query = new QueryClient({ defaultOptions: { queries: { staleTime: 15000, retry: 1, refetchOnWindowFocus: true }, mutations: { retry: false } } });
@@ -27,7 +30,7 @@ function RoleGate({roles,children}:{roles:Role[];children:ReactNode}){const {use
 async function start() {
   const root=ReactDOM.createRoot(document.getElementById('root')!);
   root.render(<WorkspaceSkeleton/>);
-  try { if(!cloudMode)await seedDatabase(); root.render(<React.StrictMode><ErrorBoundary><QueryClientProvider client={query}><AuthProvider><SocketProvider><BrowserRouter><Suspense fallback={<WorkspaceSkeleton/>}><Routes><Route element={<AppShell/>}><Route path="/dashboard" element={<RoleDashboard/>}/><Route path="/flight-status" element={<Navigate to="/flights/search?view=status" replace/>}/><Route path="/flights/search" element={<FlightSearch/>}/><Route path="/bookings/new" element={<BookingWizard/>}/><Route path="/bookings" element={<Bookings/>}/><Route path="/bookings/:id" element={<RequestDetail/>}/><Route path="/admin/flights" element={<RoleGate roles={["TMC"]}><FlightAdmin/></RoleGate>}/><Route path="/payments" element={<RoleGate roles={["TMC"]}><Payments/></RoleGate>}/><Route path="*" element={<Navigate to="/dashboard" replace/>}/></Route></Routes></Suspense></BrowserRouter><Toaster position="top-right" richColors/></SocketProvider></AuthProvider></QueryClientProvider></ErrorBoundary></React.StrictMode>); }
+  try { if(!cloudMode)await seedDatabase(); root.render(<React.StrictMode><ErrorBoundary><QueryClientProvider client={query}><AuthProvider><SocketProvider><BrowserRouter><Suspense fallback={<WorkspaceSkeleton/>}><Routes><Route element={<AppShell/>}><Route path="/dashboard" element={<RoleDashboard/>}/><Route path="/flight-status" element={<Navigate to="/flights/search?view=status" replace/>}/><Route path="/flights/search" element={<FlightSearch/>}/><Route path="/bookings/new" element={<BookingWizard/>}/><Route path="/bookings" element={<Bookings/>}/><Route path="/bookings/:id" element={<RequestDetail/>}/><Route path="/admin/flights" element={<RoleGate roles={["TMC"]}><FlightAdmin/></RoleGate>}/><Route path="/payments" element={<RoleGate roles={["TMC"]}><Payments/></RoleGate>}/><Route path="*" element={<Navigate to="/dashboard" replace/>}/></Route></Routes></Suspense></BrowserRouter><ThemeToaster/></SocketProvider></AuthProvider></QueryClientProvider></ErrorBoundary></React.StrictMode>); }
   catch(error){root.render(<div className="startup-error"><h1>Browser storage is unavailable</h1><p>{error instanceof Error?error.message:'Please enable IndexedDB for this site, then reload.'}</p><button className="btn btn-primary" onClick={()=>window.location.reload()}>Try again</button></div>);}
 }
 void start();
