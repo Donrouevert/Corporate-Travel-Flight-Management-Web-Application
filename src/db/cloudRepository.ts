@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { validateRequest } from '../lib/policy';
+import { validateTicketOverrides } from '../lib/ticketing';
 import { type TravelRequest, type User, type FlightSchedule, type TmcFulfillment } from '../types/travel';
 import { mapCloudFlight } from './flightMapping';
 type Row=Record<string,any>;
@@ -13,7 +14,11 @@ export class CloudRepository {
  async submit(r:TravelRequest,u:User){await requireBackend();const errors=validateRequest(r);if(errors.length)throw new Error(errors[0]);const {data:p,error:pe}=await supabase!.from('profiles').select('approving_manager_id').eq('id',u.authId!).single();if(pe)throw pe;const {data,error}=await supabase!.from('travel_requests').insert({requestor_id:u.authId,approving_manager_id:p.approving_manager_id,requestor:r.requestor,trip_details:r.tripDetails,flight_requirements:r.flightRequirements,special_requirements:r.specialRequirements,business_justification:r.approval.businessJustification.trim(),requested_by_signature:r.approval.requestedBySignature.trim()}).select().single();if(error)throw new Error(error.message);return request(data);}
  async approve(id:string,_u:User,approved:boolean,signature:string,remarks:string,authorized:boolean){return request(await rpc('approve_travel_request',{p_request_id:id,p_approved:approved,p_signature:signature,p_remarks:remarks,p_authorize_baggage:authorized}));}
  async adminApprove(id:string,_u:User,approved:boolean,remarks:string){return request(await rpc('admin_review_travel_request',{p_request_id:id,p_approved:approved,p_remarks:remarks}));}
- async issue(id:string,_u:User,ids:string[],manual?:Partial<TmcFulfillment>&{baseFare?:number;taxesAndFees?:number;baggageFee?:number}){if(manual&&(manual.baseFare!==undefined||manual.taxesAndFees!==undefined||manual.baggageFee!==undefined||manual.bookingReferencePnr||manual.ticketNumber))throw new Error('Cloud ticketing calculates fares and generates ticket references on the server. Leave overrides empty.');await rpc('issue_travel_ticket',{p_request_id:id,p_flight_ids:ids});return (await this.listRequests()).find(r=>r.id===id)!;}
+ async issue(id:string,_u:User,ids:string[],manual?:Partial<TmcFulfillment>&{baseFare?:number;taxesAndFees?:number;baggageFee?:number}){
+  const errors=validateTicketOverrides(manual??{});if(errors.length)throw new Error(errors[0]);
+  const p_fulfillment={baseFare:manual?.baseFare,taxesAndFees:manual?.taxesAndFees,baggageFee:manual?.baggageFee,bookingReferencePnr:manual?.bookingReferencePnr?.trim(),ticketNumber:manual?.ticketNumber?.trim(),tmcTravelConsultant:manual?.tmcTravelConsultant?.trim()};
+  await rpc('issue_travel_ticket',{p_request_id:id,p_flight_ids:ids,p_fulfillment});return (await this.listRequests()).find(r=>r.id===id)!;
+ }
  async settle(id:string,_u:User){const {data,error}=await supabase!.from('bookings').select('id').eq('request_id',id).single();if(error)throw error;await rpc('settle_travel_booking',{p_booking_id:data.id});return (await this.listRequests()).find(r=>r.id===id)!;}
  async requestRebooking(id:string,_u:User){return request(await rpc('request_travel_rebooking',{p_request_id:id}));}
  async saveFlight(f:FlightSchedule,_u:User){await rpc('save_travel_schedule',{p_flight:f});return f;}

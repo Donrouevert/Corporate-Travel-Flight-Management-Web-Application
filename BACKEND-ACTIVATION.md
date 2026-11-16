@@ -15,6 +15,8 @@ The second migration adds ADMIN accounts, admin intake review, stronger submissi
 
 The sequence is **Employee → ADMIN → assigned MANAGER → TMC → reconciliation**. New requests cannot skip intake or manager approval. Both browser validation and database checks are applied. The service key and SQL Editor remain trusted administrative tools.
 
+- Run `supabase/migrations/202611170001_tmc_fulfillment.sql` after the earlier migrations to enable validated TMC fare and reference entry. This migration is already applied to the linked project.
+
 ## 2. Provision actual accounts
 
 Create individual users in Authentication → Users. Insert a profile for each Auth UUID using the template in the previously supplied `SUPABASE-SETUP.md`. Valid roles are `REQUESTOR`, `ADMIN`, `MANAGER`, and `TMC`. Insert managers before linking employees to them. Role changes are administrator operations; there is no public registration path that can assign an elevated role. Use individual credentials for each account.
@@ -42,7 +44,7 @@ The Edge Function uses Supabase's built-in server credentials to reserve quota a
 
 Aviationstack's current-flight data provides status, airports, gates and schedule timestamps. It does not provide corporate PHP fares or seats you can reserve. Maintain bookable schedules in Flight Operations using the TMC account. Cloud records are not silently replaced with demo flight data. The CloudRepository maps SQL cabin records and booking legs back to the app models.
 
-Cloud ticketing uses server-calculated fares and generated references. Leave the manual fare/PNR override fields empty; the cloud adapter rejects overrides rather than silently accepting untrusted totals.
+Cloud ticketing accepts final PHP fare totals, PNR, ticket number and consultant name from TMC accounts through the protected ticketing RPC. Blank amounts use server-calculated inventory fares; blank PNR/ticket values generate references. The database validates amounts, reference uniqueness, approved status and matching seats, and derives billing from the protected manager baggage authorization. All itinerary inventory remains required. See **TMC-FULFILLMENT-FIX.md**.
 
 ## 5. Verify
 

@@ -1,3 +1,4 @@
+import { maximumPhp, validateTicketOverrides } from '../lib/ticketing';
 import { cloudMode } from '../lib/supabase';
 import { CloudRepository } from './cloudRepository';
 import { db, type TravelDatabase } from './dexie';
@@ -44,6 +45,7 @@ export class TravelRepository {
     roleRequired(user, 'TMC');
     return this.database.transaction('rw', this.database.requests, this.database.flights, this.database.events, async () => {
       const r = await this.database.requests.get(id); if (!r) throw new Error('Request not found.');
+      const entryErrors=validateTicketOverrides(manual??{},r.flightRequirements.excessBaggageKg);if(entryErrors.length)throw new Error(entryErrors[0]);
       if (r.status !== 'APPROVED_FOR_TMC' || !r.approval.approvedBySignature) throw new Error('Manager approval is required before ticket issuance.');
       if (flightIds.length !== r.tripDetails.itineraryLegs.length || new Set(flightIds).size !== flightIds.length) throw new Error('Assign one distinct flight for every itinerary leg.');
       const schedules = await Promise.all(flightIds.map(f => this.database.flights.get(f)));
@@ -68,6 +70,7 @@ export class TravelRepository {
       if (manual?.departureTimestamp && new Date(manual.departureTimestamp).getTime() !== new Date(f.departureTimestamp).getTime()) throw new Error('Departure must match the assigned inventory. Update the schedule first.');
       if (manual?.arrivalTimestamp && new Date(manual.arrivalTimestamp).getTime() !== new Date(schedules.at(-1)!.arrivalTimestamp).getTime()) throw new Error('Arrival must match the assigned inventory.');
       const fulfillment: TmcFulfillment = { tmcTravelConsultant: manual?.tmcTravelConsultant?.trim() || user.employeeName, bookingReferencePnr: pnr, airline: f.airline, flightNumber: schedules.map(x => x!.flightNumber).join(' / '), departureTimestamp: f.departureTimestamp, arrivalTimestamp: schedules.at(-1)!.arrivalTimestamp, ticketNumber: ticket, costsPhp: calculateCosts(manual?.baseFare ?? base, manual?.taxesAndFees ?? taxes, manual?.baggageFee ?? baggage, r.flightRequirements.excessBaggageKg, r.approval.excessBaggageAuthorized), bookingDate: today(), paymentStatus: 'UNBILLED', flightIds };
+      if(fulfillment.costsPhp.totalCost>maximumPhp)throw new Error('Total fare exceeds the supported PHP amount.');
       const next: TravelRequest = { ...r, status: 'TICKETED', tmcFulfillment: fulfillment, updatedAt: new Date().toISOString() };
       await this.database.requests.put(next); await this.event(`PNR ${pnr} issued for ${r.requestor.employeeName}`, id); return next;
     });
