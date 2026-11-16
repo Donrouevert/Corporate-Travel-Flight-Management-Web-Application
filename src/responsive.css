@@ -206,3 +206,6 @@ main { width: 100%; }
   .module-transition, .step-transition, .mobile-sidebar, .skeleton-surface::after { animation: none; }
   .skeleton-surface::after { display: none; }
 }
+/* Remove closed tooltip portals immediately; never leave detached labels beside the rail. */
+.sidebar-tooltip { pointer-events:none; }
+.is-collapsed .sidebar .sidebar-label { pointer-events:none; }

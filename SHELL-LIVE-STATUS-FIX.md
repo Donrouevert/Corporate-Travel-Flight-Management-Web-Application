@@ -40,3 +40,9 @@ Only the active or nearest matching flight on the Philippine date is selected; a
 - The controlled server check used an injected test authentication adapter for an existing account ID; actual authentication is separately guarded by the deployed gateway and tested handler. No real user password, email, role or account was changed. A signed-in production-browser end-to-end test and device visual QA remain pending.
 
 The backend fixes are already deployed. Push the full updated source contents to the GitHub branch connected to Vercel for the shell and status UI to update. Include both `src/` and `supabase/`: the frontend shares the safe status types/parser with `supabase/functions/_shared/aviation.ts`. No provider secret is included in source or the frontend bundle.
+
+## Collapsed sidebar tooltip correction
+
+The dark text boxes beside the collapsed rail were tooltip portals, not overflowing navigation labels. Tooltip roots previously retained their own uncontrolled open state while their content was conditionally introduced on collapse. The sidebar now controls a single active tooltip and cancels its hover timer on collapse/expand, route changes, pointer exit/down, touch and blur. Only the active compact-state tooltip portal is mounted. Fresh hover uses a 200ms intent delay; keyboard focus retains an immediate label and Escape dismisses it. Hidden sidebar labels and tooltip surfaces do not intercept pointer input.
+
+Regression checks cover pre-collapse hover, one tooltip at a time, pointer exit, pending/visible tooltip cleanup on navigation/expansion, and keyboard focus/Escape. The production build passes. Frontend publication still requires pushing the refreshed source ZIP contents to the Vercel-connected GitHub repository.

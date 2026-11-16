@@ -9,6 +9,7 @@ In Supabase → SQL Editor:
 - If the original seven tables do not exist, run `supabase/migrations/202611150001_initial.sql` first.
 - Run `supabase/migrations/202611150002_accounts_admin_aviation.sql` once.
 - Run `supabase/migrations/202611150003_aviation_singleflight.sql` to coalesce concurrent status lookups. This migration and the updated function have already been applied to the linked project.
+- Run `supabase/migrations/202611160001_destination_airports.sql` after the earlier migrations to enable all destination-directory airport codes. This migration is already applied to the linked project.
 
 The second migration adds ADMIN accounts, admin intake review, stronger submission checks, protected schedule/rebooking functions, Realtime publication entries, and a server-only Aviationstack cache/budget ledger. Existing unapproved manager requests are moved back to admin review. Previously approved/ticketed records are preserved.
 

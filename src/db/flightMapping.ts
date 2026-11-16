@@ -12,7 +12,7 @@ export function mapCloudFlight(row: DatabaseFlight): FlightSchedule {
     return [cabin, Number.isInteger(count) && count >= 0 ? count : 0];
   })) as FlightSchedule['seats'];
   return {
-    id: row.id, airline: row.airline, flightNumber: row.flight_number,
+    fareSeenAt: row.updated_at || row.created_at || undefined, id: row.id, airline: row.airline, flightNumber: row.flight_number,
     origin: normalizeIata(row.origin), destination: normalizeIata(row.destination), travelType: row.travel_type,
     departureTimestamp: departure.timestamp, arrivalTimestamp: arrival.timestamp,
     baseFare: Number(row.base_fare), taxesAndFees: Number(row.taxes_and_fees),

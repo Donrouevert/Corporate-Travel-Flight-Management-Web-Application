@@ -44,7 +44,7 @@ export interface TravelRequest {
   tmcFulfillment?: TmcFulfillment; createdAt: string; updatedAt: string;
 }
 export interface FlightSchedule {
-  id: string; airline: string; flightNumber: string; origin: string; destination: string;
+  id: string; airline: string; flightNumber: string; origin: string; destination: string; fareSeenAt?: string;
   travelType: 'Domestic' | 'International'; departureTimestamp: string; arrivalTimestamp: string;
   seats: Record<CabinClass, number>; capacity: Record<CabinClass, number>;
   baseFare: number; taxesAndFees: number; baggageAllowanceKg: number; baggageRatePerKg: number;
@@ -54,7 +54,7 @@ export interface TravelEvent { id: string; message: string; requestId?: string; 
 export const cabins: CabinClass[] = ['Economy', 'Premium Economy', 'Business'];
 export const purposes: Purpose[] = ['Business Meeting', 'Conference', 'Training', 'Site Visit', 'Other'];
 export const airlines = ['Philippine Airlines', 'Cebu Pacific', 'Singapore Airlines', 'Cathay Pacific', 'ANA'];
-export const airports: Record<string, string> = { MNL: 'Manila', CEB: 'Cebu', DVO: 'Davao', ILO: 'Iloilo', SIN: 'Singapore', HKG: 'Hong Kong', NRT: 'Tokyo', LHR: 'London' };
+export const airports: Record<string, string> = { MNL: 'Manila', CEB: 'Cebu', DVO: 'Davao', ILO: 'Iloilo', SIN: 'Singapore', HKG: 'Hong Kong', NRT: 'Tokyo', LHR: 'London', DRP: 'Legazpi (Daraga)', MPH: 'Boracay (Caticlan)', CGK: 'Jakarta', BKK: 'Bangkok', AMS: 'Rotterdam / Amsterdam', ZRH: 'Zurich', EWR: 'New York / Englewood Cliffs', YYZ: 'Toronto', GRU: 'São Paulo', DXB: 'Dubai', JNB: 'Johannesburg', NBO: 'Nairobi' };
 export const specialLabels: Record<keyof Omit<SpecialRequirements, 'otherText'>, string> = {
   flexibleTicket: 'Flexible ticket', multipleDestinations: 'Multiple destinations', groupBooking: 'Group booking',
   executiveVipTravel: 'Executive / VIP travel', specialBaggageEquipment: 'Special baggage / equipment',

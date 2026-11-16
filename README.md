@@ -34,7 +34,7 @@ The visuals follow the supplied Smartpoint screenshot's compact outline-icon and
 
 ## Verification
 
-121 Vitest tests pass, including required-field and flight-search validation, admin-first gatekeeping, role enforcement, seat transaction rollback, concurrent oversell prevention, billing, sign-in, password recovery, loading placeholders, immediate navigation, lazy-module readiness, account-cache preservation, shell branding, mobile drawer behavior, on-demand status requests, cache reuse, provider errors and PHT rendering. All three migrations were checked in a local PostgreSQL-compatible runtime with Auth stubs, including RLS, stage gates, billing, settlement, provider-cache access, single-flight leases, rate limiting and monthly budget enforcement. Earlier browser QA checked role dashboards, admin intake, employee record isolation, restricted routes and responsive account screens. Current shell/status UI behavior is covered by DOM component tests; a new production-browser visual test has not been performed.
+135 Vitest tests pass, including required-field and flight-search validation, admin-first gatekeeping, role enforcement, seat transaction rollback, concurrent oversell prevention, billing, sign-in, password recovery, loading placeholders, immediate navigation, lazy-module readiness, account-cache preservation, shell branding, mobile drawer behavior, on-demand status requests, cache reuse, provider errors and PHT rendering. All four migrations were checked in a local PostgreSQL-compatible runtime with Auth stubs, including RLS, stage gates, billing, settlement, provider-cache access, single-flight leases, rate limiting and monthly budget enforcement. Earlier browser QA checked role dashboards, admin intake, employee record isolation, restricted routes and responsive account screens. Current shell/status UI behavior is covered by DOM component tests; a new production-browser visual test has not been performed.
 
 The remote migrations, four assigned account profiles and updated Aviationstack Edge Function are deployed. A real-user end-to-end cloud test remains pending. See **SHELL-LIVE-STATUS-FIX.md** for the verified CORS correction, cache checks and provider coverage limits. PNRs/tickets and settlement records are application simulations; no airline reservation or payment provider integration is included.
 
@@ -64,3 +64,11 @@ Configure a custom SMTP provider under **Authentication → Email → SMTP Setti
 
 The app includes the official Unilever SVG favicon, a 32×32 PNG fallback and a 180×180 Apple home-screen icon under `public/`. `index.html` declares each icon with a version query to refresh cached icons after deployment. See `public/brand/SOURCE.md` for provenance. Push the updated HTML and public assets to the Vercel-connected GitHub repository to publish them.
 
+
+## Flight search redesign
+
+See **FLIGHT-SEARCH-REDESIGN.md** for the dual-month calendar, Supabase fare directory, booking handoff and regional destination controls. The destination airport migration is already applied to the linked Supabase project. Upload the complete updated source to GitHub for Vercel, including `src/`, `public/`, and `supabase/`; do not upload dependencies or local environment files.
+
+Airport selections now use bounded, animated dropdowns. Departure/return time windows use calendar-style popovers with draft/commit semantics and exact-minute PHT selection. See **FLIGHT-CONTROL-FIX.md** for the interaction changes and visual verification limit.
+
+Collapsed sidebar tooltips now share one controlled active state and clear on state/navigation changes, avoiding stale text boxes after closing the panel. See **SHELL-LIVE-STATUS-FIX.md**.

@@ -1,0 +1,11 @@
+# Flight selection and time controls
+
+The airport fields now use the same Base UI Select component as the cabin/sort menus, replacing the browser-owned datalist shown in the screenshot. Airport labels remain committed until an option is selected, so opening or navigating the list cannot temporarily clear the route and broaden the search. The opposite airport is disabled to prevent identical From/To selections. Destination showcase pills still set To, choose Domestic/International, and focus the updated dropdown.
+
+Menus align to the start edge below their trigger, match the trigger width, scroll within a bounded 320px panel, and reposition when space is limited. Selected options use navy text/ice-blue backgrounds and a fixed-position checkmark. Nonmodal positioning avoids locking the page scrollbar. Chevron rotation and popup opacity/transform transitions last 180ms; reduced-motion preferences disable them. The control grid uses four columns on wide screens and two on narrower screens; date and traveler controls no longer stretch across the whole form.
+
+Departure and Return windows use a custom Base UI popover, matching the calendar's white/navy styling and CLEAR/DONE actions. Pick an hour (00–23) and exact minute (00–59), then apply the draft. Either boundary may remain open. Until before From produces an inline error and disables DONE. Escape/outside dismissal discards changes. Times remain HH:mm in Philippine Standard Time; existing filtering logic and independent return windows are preserved. Arrow keys move between hour/minute values.
+
+Validation covers committed dropdown state, disabled same-airport options, regional pill focus, exact-minute time selection, reversed windows, clearing, cancellation, keyboard navigation, and independent return filtering. No database migration or new API request was required. Browser visual verification was blocked: the in-app browser timed out on the local preview and Windows Computer Use could not confidently verify the browser URL. Layout/animation rendering across devices remains unverified.
+
+Publish by uploading the refreshed source ZIP contents to the Vercel-connected GitHub repository; dependencies and local environment files are excluded.
