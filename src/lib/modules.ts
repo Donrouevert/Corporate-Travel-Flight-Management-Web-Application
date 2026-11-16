@@ -8,7 +8,7 @@ function cachedModule(load:()=>Promise<{default:ComponentType}>) {
 }
 export const modules={
  dashboard:cachedModule(()=>import('../features/dashboard/RoleDashboard').then(m=>({default:m.RoleDashboard}))),
- flights:cachedModule(()=>import('../features/flights/FlightSearch').then(m=>({default:m.FlightSearch}))),
+ flights:cachedModule(()=>import('../features/flights/FlightWorkspace').then(m=>({default:m.FlightWorkspace}))),
  newRequest:cachedModule(()=>import('../features/bookings/BookingWizard').then(m=>({default:m.BookingWizard}))),
  bookings:cachedModule(()=>import('../features/bookings/Bookings').then(m=>({default:m.Bookings}))),
  detail:cachedModule(()=>import('../features/bookings/RequestDetail').then(m=>({default:m.RequestDetail}))),

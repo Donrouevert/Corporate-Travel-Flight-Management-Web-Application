@@ -6,7 +6,7 @@ import {supabase} from '../../lib/supabase';
 import {flightStatusLabel,formatFlightTime,normalizeFlightNumber,selectRelevantFlight,type FlightStatusResult} from '../../lib/aviation';
 import {flightStatusQuerySettings,lookupFlightStatus} from '../../lib/flightStatusQuery';
 import {useAuth} from '../../contexts/AuthContext';
-import {Empty,Input,Loading,PageTitle} from '../../components/ui';
+import {Empty,Input,Loading} from '../../components/ui';
 
 export function FlightStatus(){
  const {user}=useAuth(),client=useQueryClient();
@@ -32,7 +32,7 @@ export function FlightStatus(){
  };
  const result=query.data;
  const flight=result?selectRelevantFlight(result.data,lookup):undefined;
- return <><PageTitle eyebrow="AVIATIONSTACK · FLIGHT OPERATIONS" title="Live flight status" description="Check current flight information by flight number. All times below are Philippine Standard Time."/>
+ return <><div className="flight-status-intro"><h2>Live flight status</h2><p>Check current flight information by flight number. All times below are Philippine Standard Time.</p></div>
   <section className="card status-search"><div className="smart-panel-heading"><Plane size={18}/><b>Flights</b><span>Live status</span></div><form onSubmit={event=>void submit(event)}><Input label="Flight number" placeholder="PR2845" required value={code} onChange={event=>setCode(event.target.value)} maxLength={32}/><button className="btn btn-primary" disabled={checking||!supabase}><Search size={16}/>{checking?'Checking…':'Check status'}</button></form><div className="subtle-banner">Lookups run only when you submit. Results, including empty results, are cached for 15 minutes. Internal demo schedules are not live airline data.</div></section>
   {!supabase?<div className="card"><Empty title="Cloud sign-in required" description="Configure the Supabase URL and publishable key to use the protected flight-status service."/></div>
    :error?<div role="alert" className="validation-errors">{error}</div>
