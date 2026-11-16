@@ -3,10 +3,11 @@ import { toast } from 'sonner';
 import { repository } from '../db/repositories';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
+import { displayName, displayRequestNames } from '../lib/identity';
 import type { TravelRequest } from '../types/travel';
-export const useRequests = () => {const {user}=useAuth();return useQuery({ queryKey: ['requests',user.authId??user.employeeId,user.role], queryFn: async () => (await repository.listRequests()).filter(r=>user.role==='REQUESTOR'?r.requestor.employeeId===user.employeeId:user.role==='MANAGER'?r.requestor.approvingManagerId===user.employeeId&&r.status!=='PENDING_ADMIN':true) });};
+export const useRequests = () => {const {user}=useAuth();return useQuery({ queryKey: ['requests',user.authId??user.employeeId,user.role], queryFn: async () => (await repository.listRequests()).map(displayRequestNames).filter(r=>user.role==='REQUESTOR'?r.requestor.employeeId===user.employeeId:user.role==='MANAGER'?r.requestor.approvingManagerId===user.employeeId&&r.status!=='PENDING_ADMIN':true) });};
 export const useFlights = () => useQuery({ queryKey: ['flights'], queryFn: () => repository.listFlights() });
-export const useEvents = () => useQuery({ queryKey: ['events'], queryFn: () => repository.listEvents() });
+export const useEvents = () => useQuery({ queryKey: ['events'], queryFn: async () => (await repository.listEvents()).map(event=>({...event,message:displayName(event.message)})) });
 export function useTravelMutation<T, R>(fn: (input: T) => Promise<R>, message: string, optimistic?: (old: TravelRequest[], input: T) => TravelRequest[]) {
   const query = useQueryClient(), socket = useSocket();
   return useMutation({ mutationFn: fn,

@@ -5,6 +5,7 @@ import { demoUsers } from '../db/seed';
 import { AuthScreen } from '../features/auth/AuthScreen';
 import { LoginWelcome } from '../features/auth/LoginWelcome';
 import { WorkspaceSkeleton } from '../components/Skeleton';
+import { displayPerson } from '../lib/identity';
 import type { User } from '../types/travel';
 const AuthContext=createContext<{user:User;signOut:()=>Promise<void>;cloud:boolean}|null>(null);
 export function AuthProvider({children}:{children:ReactNode}) {
@@ -24,7 +25,7 @@ export function AuthProvider({children}:{children:ReactNode}) {
  if(loading)content=welcome?null:<WorkspaceSkeleton/>;
  else if(recovering)content=<AuthScreen key="recovery" recovery recoveryReady={recoveryReady} onDemo={()=>{}} onRecoveryExit={async()=>{await signOut();setRecovering(false);setRecoveryReady(false);history.replaceState(null,'','/dashboard');}}/>;
  else if(!user)content=<AuthScreen key="login" error={error} onSignedIn={()=>setWelcome(true)} onDemo={u=>{history.replaceState(null,'','/dashboard');query.clear();sessionStorage.setItem('travel-demo-account',u.employeeId);setWelcome(true);setUser(u);}}/>;
- else content=<AuthContext.Provider value={{user,signOut,cloud:cloudMode}}>{children}</AuthContext.Provider>;
+ else content=<AuthContext.Provider value={{user:displayPerson(user),signOut,cloud:cloudMode}}>{children}</AuthContext.Provider>;
  return <><div inert={welcome} aria-hidden={welcome||undefined}>{content}</div>{welcome&&<LoginWelcome ready={!loading&&!!user} onComplete={finishWelcome}/>}</>;
 
 }

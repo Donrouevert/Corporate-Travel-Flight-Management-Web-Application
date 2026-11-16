@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, expect, it, vi } from 'vitest';
-import { AuthProvider } from '../contexts/AuthContext';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 const mocks=vi.hoisted(()=>({getSession:vi.fn(),onAuthStateChange:vi.fn(),from:vi.fn(),signOut:vi.fn()}));
 vi.mock('../lib/supabase',()=>({cloudMode:true,supabase:{auth:mocks,from:mocks.from}}));
 afterEach(()=>{cleanup();vi.resetAllMocks();});
@@ -26,4 +26,13 @@ it('preserves the page and query cache when Supabase repeats SIGNED_IN for the s
  await act(async()=>{notify('SIGNED_OUT',null);await new Promise(resolve=>setTimeout(resolve,10));});
  expect(screen.getByRole('heading',{name:'Welcome back.'})).toBeInTheDocument();
  expect(query.getQueryData(['requests','same-user','REQUESTOR'])).toBeUndefined();
+});
+
+it('projects provisioned email names without changing sign-in/contact addresses',async()=>{
+ history.replaceState(null,'','/dashboard');mocks.getSession.mockResolvedValue({data:{session:{user:{id:'email-name-user'}}}});
+ mocks.onAuthStateChange.mockReturnValue({data:{subscription:{unsubscribe:vi.fn()}}});
+ const single=vi.fn().mockResolvedValue({data:{id:'email-name-user',employee_id:'EMP-1',employee_name:'donrouevert@gmail.com',email_address:'donrouevert@gmail.com',role:'TMC'},error:null});mocks.from.mockReturnValue({select:()=>({eq:()=>({single})})});
+ function Identity(){const {user}=useAuth();return <><span data-testid="name">{user.employeeName}</span><span data-testid="contact">{user.emailAddress}</span></>;}
+ render(<QueryClientProvider client={new QueryClient()}><AuthProvider><Identity/></AuthProvider></QueryClientProvider>);
+ expect(await screen.findByTestId('name')).toHaveTextContent(/^donrouevert$/);expect(screen.getByTestId('contact')).toHaveTextContent('donrouevert@gmail.com');
 });
