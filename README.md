@@ -84,3 +84,7 @@ The sidebar and header now render the same official script wordmark component, w
 ## Clock picker and aligned flight form
 
 Departure/return windows now use an analog 24-hour clock styled after the supplied reference, with inner 1–12 and outer 13–00 hour rings, automatic progression to minutes, a draggable minute hand, and editable HH:mm fields. Exact minutes, keyboard adjustment, range validation and CLEAR/DONE draft behavior remain supported. Clock geometry and drag interactions are tested. Date and traveler controls use adjacent grid columns; multi-city airport/date fields share aligned labels and input baselines, with Add leg placed separately from the time windows. Responsive layouts stack controls into two columns. Production build and regression checks pass; rendered alignment and animation across physical devices have not been visually verified.
+
+## Sidebar palette
+
+Desktop and mobile sidebars use the reference palette: navy `#14213D`, amber `#FCA311`, white and light grey `#E5E5E5`. Official logo assets are rendered white on the navy sidebar; header branding keeps its original blue. Navigation, badges, profile details, Eco-Choice card, focus states and drawer controls share scoped sidebar colors. Calculated text contrast ratios are 15.97:1 for white/navy, 12.68:1 for light grey/navy, 7.90:1 for active navy/amber and 6.64:1 for the amber Eco-Choice link/card. Production build and existing sidebar interaction checks pass. No new physical-device visual verification was performed.

@@ -13,6 +13,7 @@ import { modules } from './lib/modules';
 import { seedDatabase } from './db/seed';
 import './index.css';
 import './responsive.css';
+import './sidebar-theme.css';
 const RoleDashboard=lazy(modules.dashboard), FlightSearch=lazy(modules.flights), BookingWizard=lazy(modules.newRequest), Bookings=lazy(modules.bookings), RequestDetail=lazy(modules.detail), FlightAdmin=lazy(modules.operations), Payments=lazy(modules.payments);
 const AppShell=lazy(()=>import('./components/layout/AppShell').then(m=>({default:m.AppShell})));
 const query = new QueryClient({ defaultOptions: { queries: { staleTime: 15000, retry: 1, refetchOnWindowFocus: true }, mutations: { retry: false } } });
