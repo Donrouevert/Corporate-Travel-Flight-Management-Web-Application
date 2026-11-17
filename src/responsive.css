@@ -217,8 +217,17 @@ main { width: 100%; }
 /* One shared official wordmark gives the sidebar and header identical lettering. */
 .brand-wordmark{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;flex-shrink:0;width:112px;line-height:1;}
 .brand-wordmark>img{display:block;width:112px;height:24px;object-fit:contain;}
-.brand-wordmark>small,.sidebar .brand-wordmark>small,.mobile-sidebar .brand-wordmark>small{font-family:Arial,sans-serif;font-size:5px;font-weight:400;line-height:1;letter-spacing:3px;text-align:center;color:var(--muted);padding-left:3px;white-space:nowrap;}
+.brand-wordmark>small,.sidebar .brand-wordmark>small,.mobile-sidebar .brand-wordmark>small{font-family:Arial,sans-serif;font-size:5px;font-weight:400;line-height:1;letter-spacing:3px;text-align:center;color:var(--muted);padding-left:3px;white-space:nowrap;margin:0;}
 .sidebar .brand-symbol,.mobile-sidebar .brand-symbol{display:grid;place-items:center;line-height:1;}
 .sidebar .brand-symbol>img,.mobile-sidebar .brand-symbol>img{display:block;width:45px;height:45px;object-fit:contain;}
 .sidebar .brand-copy,.mobile-sidebar .brand-copy{align-items:center;justify-content:center;}
 .flight-status-intro{margin:0 0 20px;}.flight-status-intro h2{font-size:21px;font-weight:650;letter-spacing:-.03em;color:var(--navy);margin:0 0 9px;}.flight-status-intro p{font-size:12px;color:var(--muted);line-height:1.7;}
+
+/* Align the rail emblem and shared wordmark with the topbar, rather than sidebar padding. */
+@media(min-width:768px){
+ .app{--workspace-header-height:74px;}
+ .topbar{height:var(--workspace-header-height);}
+ .sidebar{padding-top:0;}
+ .sidebar>.brand{height:var(--workspace-header-height);min-height:var(--workspace-header-height);flex-shrink:0;padding-top:0;padding-bottom:0;margin-bottom:32px;}
+ .sidebar .brand-symbol{height:45px;}
+}
