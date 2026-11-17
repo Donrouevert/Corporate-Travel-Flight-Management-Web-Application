@@ -15,6 +15,13 @@ export function ModuleTransition({ children }: { children: ReactNode }) {
     content.current?.focus({preventScroll:true});
   }, [pathname]);
   return <div ref={content} className="module-transition" key={pathname} tabIndex={-1}>
-    <Suspense fallback={<Skeleton layout={skeletonForPath(pathname)} fullPage label="Loading this module"/>}>{children}<ReloadReady/></Suspense>
+    <Suspense fallback={<Skeleton layout={skeletonForPath(pathname)} fullPage label="Loading this module"/>}><ModuleContent key={pathname}>{children}</ModuleContent></Suspense>
   </div>;
+}
+
+/** Layout effects wait for a suspended subtree to commit, so the entrance cannot finish behind its skeleton. */
+function ModuleContent({children}:{children:ReactNode}){
+ const content=useRef<HTMLDivElement>(null);
+ useLayoutEffect(()=>{content.current?.classList.add('is-ready');},[]);
+ return <div ref={content} className="module-content">{children}<ReloadReady/></div>;
 }
